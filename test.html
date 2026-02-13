@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>게임 테스트 대시보드</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-8">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-bold mb-8">🎮 게임 테스트 대시보드</h1>
+
+    <div class="space-y-6">
+      <!-- Test 1: File Check -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-2xl font-bold mb-4">✅ 1. 파일 존재 확인</h2>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2">
+            <span class="text-green-400">✓</span>
+            <span>index.html 파일이 생성되었습니다</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-green-400">✓</span>
+            <span>setup-database.sql 파일이 생성되었습니다</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-green-400">✓</span>
+            <span>README.md 파일이 생성되었습니다</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test 2: Open Game -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-2xl font-bold mb-4">🚀 2. 게임 실행</h2>
+        <div class="space-y-4">
+          <p>다음 버튼을 클릭하여 게임을 열어주세요:</p>
+          <a
+            href="index.html"
+            target="_blank"
+            class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+          >
+            🎮 게임 열기
+          </a>
+          <div class="mt-4 bg-yellow-900 bg-opacity-30 border border-yellow-600 p-4 rounded">
+            <p class="text-yellow-400 font-bold">⚠️ 주의</p>
+            <p class="text-sm mt-2">게임을 열기 전에 먼저 Supabase 데이터베이스 설정을 완료해주세요!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test 3: Supabase Setup -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-2xl font-bold mb-4">💾 3. Supabase 설정 확인</h2>
+        <div class="space-y-4">
+          <div class="bg-gray-900 p-4 rounded">
+            <p class="font-bold mb-2">단계별 체크리스트:</p>
+            <div class="space-y-2 ml-4">
+              <label class="flex items-center gap-2">
+                <input type="checkbox" class="w-4 h-4">
+                <span>Supabase 프로젝트 열기</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="checkbox" class="w-4 h-4">
+                <span>SQL Editor로 이동</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="checkbox" class="w-4 h-4">
+                <span>setup-database.sql 내용 복사 & 실행</span>
+              </label>
+              <label class="flex items-center gap-2">
+                <input type="checkbox" class="w-4 h-4">
+                <span>Authentication > Providers에서 Anonymous 활성화</span>
+              </label>
+            </div>
+          </div>
+          <a
+            href="https://supabase.com/dashboard/project/lbadxmlcpfdvjipjxiai/editor"
+            target="_blank"
+            class="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+          >
+            🗄️ Supabase SQL Editor 열기
+          </a>
+          <a
+            href="https://supabase.com/dashboard/project/lbadxmlcpfdvjipjxiai/auth/providers"
+            target="_blank"
+            class="inline-block bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg transition-colors ml-2"
+          >
+            🔐 Authentication 설정 열기
+          </a>
+        </div>
+      </div>
+
+      <!-- Test 4: Manual Test Checklist -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-2xl font-bold mb-4">🧪 4. 수동 테스트 체크리스트</h2>
+        <div class="bg-gray-900 p-4 rounded space-y-2">
+          <p class="font-bold mb-3">게임을 열고 다음 항목들을 테스트하세요:</p>
+
+          <div class="ml-4 space-y-2">
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">로딩 화면</div>
+                <div class="text-sm text-gray-400">로딩 스피너가 보이고 게임이 로드됨</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">시작 화면</div>
+                <div class="text-sm text-gray-400">"새 게임" 버튼이 표시됨</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">게임 시작</div>
+                <div class="text-sm text-gray-400">블록 그리드와 영웅/몬스터가 보임</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">블록 연결</div>
+                <div class="text-sm text-gray-400">마우스/터치로 같은 색 블록 3개 이상 연결</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">공격 애니메이션</div>
+                <div class="text-sm text-gray-400">영웅이 번쩍이고 투사체가 날아감</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">몬스터 피격</div>
+                <div class="text-sm text-gray-400">몬스터가 흔들리고 HP가 감소함</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">블록 제거 & 리필</div>
+                <div class="text-sm text-gray-400">사용된 블록이 사라지고 새 블록이 떨어짐</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">자동 저장</div>
+                <div class="text-sm text-gray-400">우측 상단에 "💾 저장중..." 표시</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">새로고침 후 이어하기</div>
+                <div class="text-sm text-gray-400">F5로 새로고침 후 "이어하기" 버튼 확인</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">웨이브 클리어</div>
+                <div class="text-sm text-gray-400">모든 몬스터 처치 시 다음 웨이브로 진행</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">게임 오버</div>
+                <div class="text-sm text-gray-400">턴 0 또는 영웅 전멸 시 게임 오버 화면</div>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2">
+              <input type="checkbox" class="w-4 h-4 mt-1">
+              <div>
+                <div class="font-bold">최고 기록</div>
+                <div class="text-sm text-gray-400">신기록 달성 시 "🎉 신기록!" 표시</div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test 5: Console Check -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-2xl font-bold mb-4">🔍 5. 브라우저 콘솔 확인</h2>
+        <div class="space-y-4">
+          <p>게임을 열고 <kbd class="bg-gray-700 px-2 py-1 rounded">F12</kbd>를 눌러 개발자 도구를 열어주세요.</p>
+          <div class="bg-gray-900 p-4 rounded">
+            <p class="font-bold mb-2">확인 사항:</p>
+            <ul class="list-disc ml-6 space-y-1 text-sm">
+              <li>빨간색 에러가 없어야 함</li>
+              <li>Supabase 관련 에러가 없어야 함</li>
+              <li>"Anonymous sign in error" 메시지가 없어야 함</li>
+              <li>"Save game error" 메시지가 없어야 함</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test 6: Database Check -->
+      <div class="bg-gray-800 p-6 rounded-lg">
+        <h2 class="text-2xl font-bold mb-4">🗄️ 6. 데이터베이스 데이터 확인</h2>
+        <div class="space-y-4">
+          <p>Supabase Table Editor에서 데이터를 확인하세요:</p>
+          <a
+            href="https://supabase.com/dashboard/project/lbadxmlcpfdvjipjxiai/editor"
+            target="_blank"
+            class="inline-block bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+          >
+            📊 Table Editor 열기
+          </a>
+          <div class="bg-gray-900 p-4 rounded">
+            <p class="font-bold mb-2">확인 사항:</p>
+            <ul class="list-disc ml-6 space-y-1 text-sm">
+              <li><code>game_progress</code> 테이블에 레코드가 생성되었는지</li>
+              <li><code>wave</code>, <code>turn</code> 값이 올바른지</li>
+              <li><code>heroes</code>, <code>monsters</code>, <code>grid</code> JSON 데이터가 있는지</li>
+              <li><code>best_wave</code> 값이 업데이트되는지</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Results -->
+      <div class="bg-green-900 bg-opacity-30 border border-green-600 p-6 rounded-lg">
+        <h2 class="text-2xl font-bold mb-4">✨ 테스트 완료!</h2>
+        <p>모든 항목을 체크했다면 게임이 정상적으로 작동하는 것입니다!</p>
+        <p class="mt-2 text-sm text-gray-400">문제가 발생하면 콘솔 에러 메시지를 확인해주세요.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Prevent form submission
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        const label = e.target.closest('label');
+        if (e.target.checked) {
+          label.style.opacity = '0.6';
+        } else {
+          label.style.opacity = '1';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

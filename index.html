@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>링크 디펜서</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .text-outline {
+      -webkit-text-stroke: 4px #000;
+      text-stroke: 4px #000;
+      paint-order: stroke fill;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      touch-action: none;
+      background: #111827;
+    }
+
+    #root {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0px); filter: brightness(1); }
+      50% { transform: translateY(-4px); filter: brightness(1.1); }
+    }
+
+    .monster-bounce {
+      animation: bounce 0.8s ease-in-out infinite;
+    }
+
+    @keyframes bounce-strong {
+      0%, 100% { transform: translateY(0px) scale(1); filter: brightness(1); }
+      50% { transform: translateY(-8px) scale(1.03); filter: brightness(1.15) drop-shadow(0 0 5px rgba(255,0,0,0.5)); }
+    }
+
+    .monster-bounce-strong {
+      animation: bounce-strong 0.7s ease-in-out infinite;
+    }
+
+    @keyframes block-fade-out {
+      0% { opacity: 1; transform: scale(1) rotate(0deg); }
+      100% { opacity: 0; transform: scale(0.8) rotate(15deg); }
+    }
+
+    .block-removing {
+      animation: block-fade-out 0.3s ease-out forwards;
+    }
+
+    @keyframes block-drop-in {
+      0% { opacity: 0; transform: translateY(-20px) scale(0.8); }
+      60% { transform: translateY(0) scale(1.05); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .block-new {
+      animation: block-drop-in 0.4s ease-out;
+    }
+
+    @keyframes attack-flash {
+      0% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+      30% { transform: scale(1.6) rotate(-15deg); filter: brightness(1.4) drop-shadow(0 0 10px rgba(255,255,255,0.8)); }
+      70% { transform: scale(1.4) rotate(15deg); filter: brightness(1.3) drop-shadow(0 0 8px rgba(255,255,255,0.6)); }
+      100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+    }
+
+    .hero-attacking {
+      animation: attack-flash 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes damage-shake {
+      0%, 100% { transform: translateX(0) scale(1) rotate(0deg); filter: brightness(1); }
+      10% { transform: translateX(-10px) scale(1.15) rotate(-8deg); filter: brightness(1.5); }
+      30% { transform: translateX(10px) scale(1.15) rotate(8deg); filter: brightness(1.3); }
+      50% { transform: translateX(-8px) scale(1.1) rotate(-5deg); filter: brightness(1.2); }
+      70% { transform: translateX(8px) scale(1.1) rotate(5deg); filter: brightness(1.1); }
+      90% { transform: translateX(-3px) scale(1.05) rotate(-2deg); filter: brightness(1.05); }
+    }
+
+    .monster-damaged {
+      animation: damage-shake 0.5s ease-in-out;
+      filter: invert(1) hue-rotate(180deg) brightness(1.5);
+    }
+
+    @keyframes monster-death {
+      0% { opacity: 1; transform: scale(1) rotate(0deg); filter: brightness(1); }
+      50% { opacity: 0.7; transform: scale(1.2) rotate(10deg); filter: brightness(2); }
+      100% { opacity: 0; transform: scale(0.3) rotate(45deg); filter: brightness(0); }
+    }
+
+    .monster-dying {
+      animation: monster-death 0.5s ease-out forwards;
+    }
+
+    @keyframes screen-shake {
+      0%, 100% { transform: translate(0, 0); }
+      10% { transform: translate(-4px, 2px); }
+      20% { transform: translate(4px, -2px); }
+      30% { transform: translate(-4px, -2px); }
+      40% { transform: translate(4px, 2px); }
+      50% { transform: translate(-4px, 2px); }
+      60% { transform: translate(4px, -2px); }
+      70% { transform: translate(-4px, -2px); }
+      80% { transform: translate(4px, 2px); }
+      90% { transform: translate(-2px, 1px); }
+    }
+
+    .screen-shake {
+      animation: screen-shake 0.4s ease-in-out;
+    }
+
+    @keyframes impact-flash {
+      0% { opacity: 0; transform: scale(0.5); }
+      50% { opacity: 1; transform: scale(1.5); }
+      100% { opacity: 0; transform: scale(2); }
+    }
+
+    .impact-flash {
+      animation: impact-flash 0.5s ease-out;
+    }
+
+    @keyframes projectile-spin {
+      from { transform: translate(-50%, -50%) rotate(0deg) scale(1.2); }
+      to { transform: translate(-50%, -50%) rotate(180deg) scale(1.2); }
+    }
+
+    .projectile-trail {
+      animation: projectile-spin 0.4s linear;
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.6));
+    }
+
+    @keyframes shockwave {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+        filter: brightness(2);
+      }
+      50% {
+        filter: brightness(1.5);
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(3);
+        opacity: 0;
+        filter: brightness(1);
+      }
+    }
+
+    .shockwave-ring {
+      animation: shockwave 0.5s ease-out;
+      filter: drop-shadow(0 0 8px currentColor);
+    }
+
+    @keyframes popup-appear {
+      0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px) rotate(-3deg);
+        filter: brightness(0.8);
+      }
+      60% {
+        transform: scale(1.05) translateY(-5px) rotate(1deg);
+        filter: brightness(1.2);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0) rotate(0deg);
+        filter: brightness(1);
+      }
+    }
+
+    .popup-appear {
+      animation: popup-appear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes shine {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
+    }
+
+    .shine-effect {
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+      background-size: 200% 100%;
+      animation: shine 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.05); opacity: 0.8; }
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .fade-in {
+      animation: fade-in 0.3s ease-in;
+    }
+
+    @keyframes combo-bounce {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.15); }
+      50% { transform: scale(0.95); }
+      70% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .combo-message {
+      animation: combo-bounce 0.4s ease-out;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner {
+      animation: spin 1s linear infinite;
+    }
+
+    .puzzle-zone {
+      touch-action: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback, useMemo } = React;
+    const { createClient } = supabase;
+
+    // ==================== SUPABASE CONFIG ====================
+    const SUPABASE_URL = 'https://lbadxmlcpfdvjipjxiai.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiYWR4bWxjcGZkdmppcGp4aWFpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2MjYxMDMsImV4cCI6MjA4NjIwMjEwM30.EiGuOpj6xAqjhcpJfhNcLGYTghzO08v7SkwWEPRjAHA';
+
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // ==================== CONSTANTS ====================
+    const ELEMENTS = ['ice', 'fire', 'electric', 'nature'];
+
+    const ELEMENT_CONFIG = {
+      ice: {
+        color: 'bg-sky-400',
+        icon: '❄️',
+        blockImage: 'images/ice.png',
+        heroImage: 'images/hero-ice.png',
+        monsterImage: 'images/monster-ice.png',
+        border: 'border-sky-600',
+        textColor: 'text-sky-400'
+      },
+      fire: {
+        color: 'bg-red-500',
+        icon: '🔥',
+        blockImage: 'images/fire.png',
+        heroImage: 'images/hero-fire.png',
+        monsterImage: 'images/monster-fire.png',
+        border: 'border-red-700',
+        textColor: 'text-red-500'
+      },
+      electric: {
+        color: 'bg-yellow-400',
+        icon: '⚡',
+        blockImage: 'images/electric.png',
+        heroImage: 'images/hero-electric.png',
+        monsterImage: 'images/monster-electric.png',
+        border: 'border-yellow-600',
+        textColor: 'text-yellow-400'
+      },
+      nature: {
+        color: 'bg-green-500',
+        icon: '🍃',
+        blockImage: 'images/nature.png',
+        heroImage: 'images/hero-nature.png',
+        monsterImage: 'images/monster-nature.png',
+        border: 'border-green-700',
+        textColor: 'text-green-500'
+      }
+    };
+
+    const LANE_MAP = { ice: 0, fire: 1, electric: 2, nature: 3 };
+    const GRID_ROWS = 6;
+    const GRID_COLS = 7;
+    const INITIAL_TURNS = 12;
+    const DAMAGE_PER_BLOCK = 20;
+    const TURN_BONUS = 5;
+    const MAX_TURNS = 35;
+
+    // ==================== SUPABASE FUNCTIONS ====================
+
+    async function signInAnonymously() {
+      const { data, error } = await supabaseClient.auth.signInAnonymously();
+      if (error) {
+        console.error('Anonymous sign in error:', error);
+        return null;
+      }
+      return data.user;
+    }
+
+    async function getCurrentUser() {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+      return user;
+    }
+
+    async function saveGameProgress(userId, gameState, bestWave) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('game_progress')
+          .upsert({
+            user_id: userId,
+            wave: gameState.wave,
+            turn: gameState.turn,
+            heroes: gameState.heroes,
+            monsters: gameState.monsters,
+            grid: gameState.grid,
+            best_wave: bestWave,
+            killed_monsters: gameState.killedMonsters || 0,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id'
+          });
+
+        if (error) throw error;
+        return true;
+      } catch (error) {
+        console.error('Save game error:', error);
+        return false;
+      }
+    }
+
+    async function loadGameProgress(userId) {
+      try {
+        const { data, error } = await supabaseClient
+          .from('game_progress')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (error) {
+          if (error.code === 'PGRST116') return null;
+          throw error;
+        }
+
+        return data;
+      } catch (error) {
+        console.error('Load game error:', error);
+        return null;
+      }
+    }
+
+    // ==================== UTILITY FUNCTIONS ====================
+
+    function areAdjacent(pos1, pos2) {
+      const rowDiff = Math.abs(pos1.row - pos2.row);
+      const colDiff = Math.abs(pos1.col - pos2.col);
+      return rowDiff <= 1 && colDiff <= 1 && (rowDiff + colDiff) > 0;
+    }
+
+    function canAddToPath(currentPath, newBlock) {
+      if (currentPath.length === 0) return true;
+
+      if (currentPath.length >= 2) {
+        const secondLast = currentPath[currentPath.length - 2];
+        if (secondLast.row === newBlock.row && secondLast.col === newBlock.col) {
+          return 'backtrack';
+        }
+      }
+
+      const lastBlock = currentPath[currentPath.length - 1];
+
+      if (lastBlock.element !== newBlock.element) return false;
+      if (!areAdjacent(lastBlock, newBlock)) return false;
+
+      const isInPath = currentPath.some(block =>
+        block.row === newBlock.row && block.col === newBlock.col
+      );
+      if (isInPath) return false;
+
+      return true;
+    }
+
+    function generateRandomGrid(rows, cols) {
+      return Array(rows).fill().map(() =>
+        Array(cols).fill().map(() => ({
+          element: ELEMENTS[Math.floor(Math.random() * ELEMENTS.length)],
+          isNew: false
+        }))
+      );
+    }
+
+    function removeBlocks(grid, path) {
+      const newGrid = grid.map(row => [...row]);
+      path.forEach(({ row, col }) => {
+        newGrid[row][col] = null;
+      });
+      return newGrid;
+    }
+
+    function applyGravity(grid) {
+      const newGrid = Array(GRID_ROWS).fill().map(() => Array(GRID_COLS).fill(null));
+
+      for (let col = 0; col < GRID_COLS; col++) {
+        let writeRow = GRID_ROWS - 1;
+        for (let row = GRID_ROWS - 1; row >= 0; row--) {
+          if (grid[row][col] !== null) {
+            newGrid[writeRow][col] = { ...grid[row][col], isNew: false };
+            writeRow--;
+          }
+        }
+      }
+
+      return newGrid;
+    }
+
+    function refillGrid(grid) {
+      const newGrid = grid.map(row => [...row]);
+
+      for (let row = 0; row < GRID_ROWS; row++) {
+        for (let col = 0; col < GRID_COLS; col++) {
+          if (newGrid[row][col] === null) {
+            newGrid[row][col] = {
+              element: ELEMENTS[Math.floor(Math.random() * ELEMENTS.length)],
+              isNew: true
+            };
+          }
+        }
+      }
+
+      return newGrid;
+    }
+
+    function updateGridAfterAttack(grid, path) {
+      let newGrid = removeBlocks(grid, path);
+      newGrid = applyGravity(newGrid);
+      newGrid = refillGrid(newGrid);
+      return newGrid;
+    }
+
+    function calculateDamage(pathLength) {
+      const baseDamage = pathLength * DAMAGE_PER_BLOCK;
+
+      // 콤보 배율 (길게 이을수록 배율 증가)
+      let multiplier = 1.0;
+
+      if (pathLength >= 10) {
+        multiplier = 2.0;  // 10개 이상: 2배
+      } else if (pathLength >= 8) {
+        multiplier = 1.7;  // 8~9개: 1.7배
+      } else if (pathLength >= 6) {
+        multiplier = 1.4;  // 6~7개: 1.4배
+      } else if (pathLength >= 5) {
+        multiplier = 1.2;  // 5개: 1.2배
+      }
+      // 3~4개: 1.0배 (기본)
+
+      return Math.round(baseDamage * multiplier);
+    }
+
+    function findTarget(monsters, element) {
+      const targetLane = LANE_MAP[element];
+      const laneMonsters = monsters.filter(m => m.lane === targetLane);
+
+      if (laneMonsters.length === 0) return null;
+
+      return laneMonsters.reduce((closest, monster) =>
+        monster.position < closest.position ? monster : closest
+      );
+    }
+
+    function applyAOEDamage(monsters, excludeLane, aoeDamage) {
+      return monsters.map(monster => {
+        // Skip monsters in the target lane
+        if (monster.lane === excludeLane) return monster;
+
+        // Apply AOE damage to monsters in other lanes
+        const newHp = Math.max(0, monster.hp - aoeDamage);
+        return {
+          ...monster,
+          hp: newHp,
+          state: newHp > 0 ? 'damaged' : monster.state
+        };
+      }).filter(m => m.hp > 0); // Remove dead monsters
+    }
+
+    function getMonsterIcon(hp) {
+      return hp >= 300 ? '👹' : '👿';
+    }
+
+    function generateWave(wave) {
+      let monsters = [];
+
+      // Wave 1: 1마리, ice 레인 고정, pos 4, HP 60
+      if (wave === 1) {
+        const hp = 60;
+        monsters.push({
+          id: `monster-${Date.now()}-0-${Math.random()}`,
+          element: ELEMENTS[0],
+          hp: hp,
+          maxHp: hp,
+          lane: 0,
+          position: 4,
+          state: 'idle'
+        });
+      }
+      // Wave 2: 1마리, 랜덤 레인, pos 4, HP 80
+      else if (wave === 2) {
+        const hp = 80;
+        const randomLane = Math.floor(Math.random() * 4);
+        monsters.push({
+          id: `monster-${Date.now()}-0-${Math.random()}`,
+          element: ELEMENTS[randomLane],
+          hp: hp,
+          maxHp: hp,
+          lane: randomLane,
+          position: 4,
+          state: 'idle'
+        });
+      }
+      // Wave 3-4: 2마리, 랜덤 레인, pos 4, HP 100~140
+      else if (wave <= 4) {
+        const hp = wave === 3 ? 100 : 140;
+        for (let i = 0; i < 2; i++) {
+          const randomLane = Math.floor(Math.random() * 4);
+          monsters.push({
+            id: `monster-${Date.now()}-${i}-${Math.random()}`,
+            element: ELEMENTS[randomLane],
+            hp: hp,
+            maxHp: hp,
+            lane: randomLane,
+            position: 4,
+            state: 'idle'
+          });
+        }
+      }
+      // Wave 5-7: 2~3마리, 랜덤 레인, pos 3~4, HP 200~280
+      else if (wave <= 7) {
+        const count = wave === 5 ? 2 : 3;
+        const hp = 200 + (wave - 5) * 40;
+        for (let i = 0; i < count; i++) {
+          const randomLane = Math.floor(Math.random() * 4);
+          monsters.push({
+            id: `monster-${Date.now()}-${i}-${Math.random()}`,
+            element: ELEMENTS[randomLane],
+            hp: hp,
+            maxHp: hp,
+            lane: randomLane,
+            position: Math.random() < 0.5 ? 3 : 4,
+            state: 'idle'
+          });
+        }
+      }
+      // Wave 8-9: 3~4마리, 랜덤 레인, pos 2~4, HP 350~500
+      else if (wave <= 9) {
+        const count = wave === 8 ? 3 : 4;
+        const hp = wave === 8 ? 350 : 500;
+        for (let i = 0; i < count; i++) {
+          const randomLane = Math.floor(Math.random() * 4);
+          monsters.push({
+            id: `monster-${Date.now()}-${i}-${Math.random()}`,
+            element: ELEMENTS[randomLane],
+            hp: hp,
+            maxHp: hp,
+            lane: randomLane,
+            position: Math.floor(Math.random() * 3) + 2, // 2~4 랜덤
+            state: 'idle'
+          });
+        }
+      }
+      // Wave 10 (Final Boss): 2마리, 랜덤 레인, HP 800+
+      else if (wave === 10) {
+        const count = 2;
+        const hp = 800;
+        for (let i = 0; i < count; i++) {
+          const randomLane = Math.floor(Math.random() * 4);
+          monsters.push({
+            id: `monster-${Date.now()}-${i}-${Math.random()}`,
+            element: ELEMENTS[randomLane],
+            hp: hp,
+            maxHp: hp,
+            lane: randomLane,
+            position: 3,
+            state: 'idle'
+          });
+        }
+      }
+
+      return monsters;
+    }
+
+    function initializeHeroes() {
+      return ELEMENTS.map((element, index) => ({
+        id: index,
+        element: element,
+        hp: 100,
+        maxHp: 100,
+        lane: index,
+        state: 'idle'
+      }));
+    }
+
+    // ==================== COMPONENTS ====================
+
+    function LoadingScreen() {
+      return (
+        <div className="absolute inset-0 bg-gray-900 flex items-center justify-center z-50">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full spinner mx-auto mb-4"></div>
+            <p className="text-white text-lg">게임을 불러오는 중...</p>
+          </div>
+        </div>
+      );
+    }
+
+    function StartScreen({ onNewGame, onContinue, hasSavedGame, bestWave }) {
+      return (
+        <div className="absolute inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(17, 24, 39, 0.85)' }}>
+          <div className="text-center px-8">
+            <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-8">링크 디펜서</h1>
+
+            {bestWave > 1 && (
+              <div className="bg-yellow-500 bg-opacity-20 border-2 border-yellow-500 rounded-lg p-4 mb-6">
+                <p className="text-yellow-400 text-sm font-bold">최고 기록</p>
+                <p className="text-white text-3xl font-bold">Wave {bestWave}</p>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {hasSavedGame && (
+                <button
+                  onClick={onContinue}
+                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-lg transition-colors text-lg"
+                >
+                  이어하기
+                </button>
+              )}
+              <button
+                onClick={onNewGame}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-lg transition-colors text-lg"
+              >
+                새 게임
+              </button>
+            </div>
+
+            <div className="mt-8 text-gray-400 text-sm">
+              <p>같은 속성 블록을 3개 이상 연결하여 공격!</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function Block({ row, col, element, isSelected, selectionIndex, onInteract, isRemoving, isNew }) {
+      if (!element) return <div className="aspect-square" />;
+
+      const config = ELEMENT_CONFIG[element];
+
+      return (
+        <div
+          className={`
+            relative flex items-center justify-center
+            ${config.color}
+            rounded-xl
+            ${isSelected ? 'ring-4 ring-white scale-110' : ''}
+            ${isRemoving ? 'block-removing' : ''}
+            ${isNew ? 'block-new' : ''}
+            cursor-pointer
+            transition-all duration-150
+            aspect-square
+          `}
+          style={{
+            boxShadow: isSelected
+              ? '0 6px 12px rgba(0,0,0,0.5), inset 0 3px 6px rgba(255,255,255,0.6), inset 0 -3px 6px rgba(0,0,0,0.4)'
+              : '0 4px 8px rgba(0,0,0,0.4), inset 0 2px 4px rgba(255,255,255,0.5), inset 0 -2px 4px rgba(0,0,0,0.3)',
+            border: '2px solid rgba(0,0,0,0.4)',
+            position: 'relative',
+            filter: isSelected ? 'brightness(1.2) drop-shadow(0 0 8px rgba(255,255,255,0.8))' : 'none'
+          }}
+          onMouseDown={(e) => onInteract(e, row, col)}
+          onMouseEnter={(e) => onInteract(e, row, col)}
+          onTouchStart={(e) => onInteract(e, row, col)}
+          onTouchMove={(e) => onInteract(e, row, col)}
+        >
+          {/* 상단 하이라이트 */}
+          <div
+            className="absolute inset-0 rounded-xl pointer-events-none"
+            style={{
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0.4) 0%, transparent 30%, rgba(0,0,0,0.2) 100%)'
+            }}
+          />
+          <img
+            src={config.blockImage}
+            alt={element}
+            className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 object-contain relative z-10"
+            draggable="false"
+          />
+          {isSelected && (
+            <div className="absolute top-0.5 right-0.5 bg-white text-black rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs font-bold z-20">
+              {selectionIndex + 1}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function ConnectionLayer({ path, gridRef }) {
+      if (!gridRef.current || path.length < 2) return null;
+
+      const rect = gridRef.current.getBoundingClientRect();
+      const blockWidth = rect.width / GRID_COLS;
+      const blockHeight = rect.height / GRID_ROWS;
+
+      const points = path.map(({ row, col }) => ({
+        x: col * blockWidth + blockWidth / 2,
+        y: row * blockHeight + blockHeight / 2
+      }));
+
+      const pathData = points.reduce((acc, point, index) => {
+        if (index === 0) return `M ${point.x} ${point.y}`;
+        return `${acc} L ${point.x} ${point.y}`;
+      }, '');
+
+      return (
+        <svg
+          className="absolute inset-0 pointer-events-none"
+          style={{ width: '100%', height: '100%' }}
+        >
+          <path
+            d={pathData}
+            stroke="#fff"
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+            opacity="0.8"
+          />
+          {points.map((point, index) => (
+            <circle
+              key={index}
+              cx={point.x}
+              cy={point.y}
+              r="8"
+              fill="#fff"
+              opacity="0.6"
+            />
+          ))}
+        </svg>
+      );
+    }
+
+    function PuzzleZone({ grid, onPathComplete, disabled, removingBlocks }) {
+      const [path, setPath] = useState([]);
+      const [isDrawing, setIsDrawing] = useState(false);
+      const gridRef = useRef(null);
+
+      const getBlockFromEvent = useCallback((event) => {
+        if (!gridRef.current) return null;
+
+        const touch = event.touches ? event.touches[0] : event;
+        const rect = gridRef.current.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        const blockWidth = rect.width / GRID_COLS;
+        const blockHeight = rect.height / GRID_ROWS;
+
+        const col = Math.floor(x / blockWidth);
+        const row = Math.floor(y / blockHeight);
+
+        if (row >= 0 && row < GRID_ROWS && col >= 0 && col < GRID_COLS) {
+          return { row, col };
+        }
+        return null;
+      }, []);
+
+      const handleInteract = useCallback((event, row, col) => {
+        if (disabled) return;
+
+        const block = grid[row][col];
+        if (!block) return;
+
+        if (event.type === 'mousedown' || event.type === 'touchstart') {
+          event.preventDefault();
+          setIsDrawing(true);
+          setPath([{ row, col, element: block.element }]);
+        } else if ((event.type === 'mouseenter' || event.type === 'touchmove') && isDrawing) {
+          event.preventDefault();
+
+          setPath(currentPath => {
+            const validation = canAddToPath(currentPath, { row, col, element: block.element });
+
+            if (validation === 'backtrack') {
+              return currentPath.slice(0, -1);
+            } else if (validation === true) {
+              return [...currentPath, { row, col, element: block.element }];
+            }
+
+            return currentPath;
+          });
+        }
+      }, [grid, disabled, isDrawing]);
+
+      const handleEnd = useCallback((event) => {
+        if (!isDrawing) return;
+        event.preventDefault();
+
+        setIsDrawing(false);
+
+        if (path.length >= 3) {
+          onPathComplete(path);
+        }
+
+        setPath([]);
+      }, [isDrawing, path, onPathComplete]);
+
+      useEffect(() => {
+        const handleGlobalMouseUp = (e) => handleEnd(e);
+        const handleGlobalTouchEnd = (e) => handleEnd(e);
+
+        if (isDrawing) {
+          document.addEventListener('mouseup', handleGlobalMouseUp);
+          document.addEventListener('touchend', handleGlobalTouchEnd);
+        }
+
+        return () => {
+          document.removeEventListener('mouseup', handleGlobalMouseUp);
+          document.removeEventListener('touchend', handleGlobalTouchEnd);
+        };
+      }, [isDrawing, handleEnd]);
+
+      return (
+        <div className="relative h-full w-full flex items-center justify-center puzzle-zone px-2">
+          <div
+            ref={gridRef}
+            className="relative grid gap-1 w-full"
+            style={{
+              maxWidth: '600px',
+              aspectRatio: '7 / 6',
+              gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
+              gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`
+            }}
+          >
+            {grid.map((row, rowIndex) =>
+              row.map((block, colIndex) => {
+                const isInPath = path.some(p => p.row === rowIndex && p.col === colIndex);
+                const pathIndex = path.findIndex(p => p.row === rowIndex && p.col === colIndex);
+                const isRemoving = removingBlocks.some(p => p.row === rowIndex && p.col === colIndex);
+
+                return (
+                  <Block
+                    key={`${rowIndex}-${colIndex}`}
+                    row={rowIndex}
+                    col={colIndex}
+                    element={block?.element}
+                    isSelected={isInPath}
+                    selectionIndex={pathIndex}
+                    onInteract={handleInteract}
+                    isRemoving={isRemoving}
+                    isNew={block?.isNew}
+                  />
+                );
+              })
+            )}
+            <ConnectionLayer path={path} gridRef={gridRef} />
+          </div>
+        </div>
+      );
+    }
+
+    function Hero({ element, hp, maxHp, state }) {
+      const config = ELEMENT_CONFIG[element];
+      const hpPercent = (hp / maxHp) * 100;
+
+      return (
+        <div className="flex flex-col items-center gap-1" style={{ transform: 'translate(30px, 5px)' }}>
+          <div
+            className={`
+              ${state === 'attacking' ? 'hero-attacking' : ''}
+              ${state === 'damaged' ? 'monster-damaged' : ''}
+              ${!config.heroImage ? 'text-2xl sm:text-3xl md:text-4xl' : ''}
+            `}
+            style={{ marginBottom: '0px' }}
+          >
+            {config.heroImage ? (
+              <img
+                src={config.heroImage}
+                alt={element}
+                className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 object-contain"
+                style={{
+                  transform: 'translateX(5px) scale(1.615)',
+                  transformOrigin: 'center bottom'
+                }}
+                draggable="false"
+              />
+            ) : (
+              config.icon
+            )}
+          </div>
+          <div
+            className="w-8 sm:w-10 md:w-12 h-2 bg-gray-700 rounded-full overflow-hidden"
+            style={{
+              position: 'relative',
+              zIndex: 10,
+              border: '2px solid #000',
+              boxSizing: 'border-box'
+            }}
+          >
+            <div
+              className={`h-full ${config.color} transition-all duration-300`}
+              style={{ width: `${hpPercent}%` }}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    function Monster({ element, hp, maxHp, position, state }) {
+      const config = ELEMENT_CONFIG[element];
+      const hpPercent = (hp / maxHp) * 100;
+      const isStrong = maxHp >= 150;
+
+      return (
+        <div
+          className="flex flex-col items-center gap-1 absolute"
+          style={{
+            left: `calc(${position * 16}% + 100px)`,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            transition: 'left 0.3s ease-out'
+          }}
+        >
+          <div className={`
+            ${state === 'idle' ? (isStrong ? 'monster-bounce-strong' : 'monster-bounce') : ''}
+            ${state === 'damaged' ? 'monster-damaged' : ''}
+            ${state === 'attacking' ? 'hero-attacking' : ''}
+          `}>
+            {config.monsterImage ? (
+              <img
+                src={config.monsterImage}
+                alt={element}
+                className="object-contain"
+                style={{
+                  width: isStrong ? '100px' : '82px',
+                  height: isStrong ? '100px' : '82px'
+                }}
+                draggable="false"
+              />
+            ) : (
+              <div className="text-2xl sm:text-3xl md:text-4xl">
+                {getMonsterIcon(maxHp)}
+              </div>
+            )}
+          </div>
+          <div
+            className="w-12 h-2 bg-gray-700 rounded-full overflow-hidden"
+            style={{
+              border: '2px solid #000',
+              boxSizing: 'border-box',
+              position: 'relative',
+              zIndex: 10
+            }}
+          >
+            <div
+              className={`h-full ${config.color} transition-all duration-300`}
+              style={{ width: `${hpPercent}%` }}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    function Projectile({ from, to, element, onComplete, isAOE = false }) {
+      const [position, setPosition] = useState(from);
+      const config = ELEMENT_CONFIG[element];
+
+      useEffect(() => {
+        const duration = 400;
+        const startTime = Date.now();
+
+        const animate = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+
+          const x = from.x + (to.x - from.x) * progress;
+          const y = from.y + (to.y - from.y) * progress;
+
+          setPosition({ x, y });
+
+          if (progress < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            onComplete();
+          }
+        };
+
+        requestAnimationFrame(animate);
+      }, [from, to, onComplete]);
+
+      // 직접 공격은 크고 화려하게, AOE는 작게
+      const imgSize = isAOE ? 15 : 25;
+      const rotation = isAOE ? 0 : 720; // 직접 공격은 2바퀴 회전
+
+      const glowColors = {
+        ice: 'rgba(56, 189, 248, 0.4)',
+        fire: 'rgba(239, 68, 68, 0.4)',
+        electric: 'rgba(234, 179, 8, 0.4)',
+        nature: 'rgba(34, 197, 94, 0.4)'
+      };
+
+      return (
+        <div
+          className="absolute pointer-events-none z-50"
+          style={{
+            left: `${position.x}px`,
+            top: `${position.y}px`,
+            transform: 'translate(-50%, -50%)'
+          }}
+        >
+          {/* 빛나는 원형 배경 */}
+          <div
+            style={{
+              position: 'absolute',
+              width: `${imgSize * 1.8}px`,
+              height: `${imgSize * 1.8}px`,
+              borderRadius: '50%',
+              background: `radial-gradient(circle, ${glowColors[element]}, transparent)`,
+              transform: 'translate(-50%, -50%)',
+              left: '50%',
+              top: '50%',
+              filter: 'blur(4px)'
+            }}
+          />
+
+          {/* 메인 투사체 */}
+          <img
+            src={config.blockImage}
+            alt={element}
+            style={{
+              width: `${imgSize}px`,
+              height: `${imgSize}px`,
+              filter: 'brightness(1.4) drop-shadow(0 0 6px rgba(255,255,255,0.8))',
+              animation: 'projectile-spin 0.4s linear'
+            }}
+            draggable="false"
+          />
+        </div>
+      );
+    }
+
+    function Shockwave({ x, y, element, onComplete }) {
+      const config = ELEMENT_CONFIG[element];
+
+      const colorMap = {
+        'ice': '#38bdf8',
+        'fire': '#ef4444',
+        'electric': '#facc15',
+        'nature': '#22c55e'
+      };
+
+      useEffect(() => {
+        const timer = setTimeout(() => {
+          onComplete();
+        }, 500);
+
+        return () => clearTimeout(timer);
+      }, [onComplete]);
+
+      return (
+        <>
+          {/* 외부 링 */}
+          <div
+            className="absolute pointer-events-none shockwave-ring"
+            style={{
+              left: `${x}px`,
+              top: `${y}px`,
+              width: '40px',
+              height: '40px',
+              border: `2.5px solid ${colorMap[element]}`,
+              borderRadius: '50%',
+              transform: 'translate(-50%, -50%)'
+            }}
+          />
+          {/* 내부 링 */}
+          <div
+            className="absolute pointer-events-none shockwave-ring"
+            style={{
+              left: `${x}px`,
+              top: `${y}px`,
+              width: '25px',
+              height: '25px',
+              border: `2px solid ${colorMap[element]}`,
+              borderRadius: '50%',
+              transform: 'translate(-50%, -50%)',
+              animationDelay: '0.1s'
+            }}
+          />
+          {/* 중심 플래시 */}
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              left: `${x}px`,
+              top: `${y}px`,
+              width: '15px',
+              height: '15px',
+              backgroundColor: colorMap[element],
+              borderRadius: '50%',
+              transform: 'translate(-50%, -50%)',
+              opacity: 0.6,
+              animation: 'impact-flash 0.3s ease-out'
+            }}
+          />
+        </>
+      );
+    }
+
+    function Lane({ heroes, monsters, laneIndex, projectiles }) {
+      const hero = heroes.find(h => h.lane === laneIndex);
+      const laneMonsters = monsters.filter(m => m.lane === laneIndex);
+
+      // 각 레인별 배경 이미지
+      const laneBackgrounds = [
+        'images/lane-ice.png',      // 얼음 레인
+        'images/lane-fire.png',     // 불 레인
+        'images/lane-electric.png', // 전기 레인
+        'images/lane-nature.png'    // 자연 레인
+      ];
+
+      return (
+        <div
+          className="relative flex items-center h-full px-2"
+          style={{
+            backgroundImage: `url('${laneBackgrounds[laneIndex]}')`,
+            backgroundSize: '100% 100%',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        >
+          <div className="flex-shrink-0">
+            {hero && <Hero {...hero} />}
+          </div>
+
+          <div className="relative flex-1 h-full ml-2">
+            {laneMonsters.map(monster => (
+              <Monster key={monster.id} {...monster} />
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function BattleZone({ heroes, monsters, projectiles, shockwaves, onProjectileComplete, onShockwaveComplete }) {
+      return (
+        <div className="relative h-full w-full flex items-center justify-center">
+          <div className="relative h-full w-full" style={{ maxWidth: '720px' }}>
+            <div className="h-full flex flex-col">
+              {[0, 1, 2, 3].map(laneIndex => (
+                <div key={laneIndex} style={{ height: '25%', flex: 'none' }}>
+                  <Lane
+                    heroes={heroes}
+                    monsters={monsters}
+                    laneIndex={laneIndex}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="absolute inset-0 pointer-events-none">
+              {projectiles.map(proj => (
+                <Projectile
+                  key={proj.id}
+                  {...proj}
+                  onComplete={() => onProjectileComplete(proj.id)}
+                />
+              ))}
+              {shockwaves.map(shock => (
+                <Shockwave
+                  key={shock.id}
+                  {...shock}
+                  onComplete={() => onShockwaveComplete(shock.id)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function HUD({ wave, turn, bestWave, isSaving }) {
+      return (
+        <div className="relative h-full w-full flex items-center justify-center">
+          <div className="relative flex items-center justify-center gap-8 w-full px-4" style={{ maxWidth: '720px' }}>
+            <div className="text-center flex flex-col gap-0">
+              <div className="text-yellow-400 text-base sm:text-lg font-bold text-outline">WAVE</div>
+              <div className="text-white font-bold text-outline" style={{ fontSize: '27px', marginTop: '-2px' }}>{wave}</div>
+            </div>
+            <div className="text-center flex flex-col gap-0">
+              <div className="text-blue-400 text-base sm:text-lg font-bold text-outline">TURN</div>
+              <div className="text-white font-bold text-outline" style={{ fontSize: '27px', marginTop: '-2px' }}>{turn}</div>
+            </div>
+            <div className="text-center flex flex-col gap-0">
+              <div className="text-purple-400 text-base sm:text-lg font-bold text-outline">BEST WAVE</div>
+              <div className="text-white font-bold text-outline" style={{ fontSize: '27px', marginTop: '-2px' }}>{bestWave}</div>
+            </div>
+            {isSaving && (
+              <div className="absolute -top-1 -right-4 text-green-400 text-xs">
+                💾 저장중...
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function GuideBar({ message }) {
+      const isCombo = message.includes('COMBO');
+      return (
+        <div className="h-full w-full flex items-center justify-center px-4" style={{ paddingTop: '110px' }}>
+          <div
+            className={`text-white text-base sm:text-lg text-center w-full text-outline ${isCombo ? 'combo-message' : 'fade-in'}`}
+            style={{ maxWidth: '720px' }}
+            key={message}
+          >
+            {message}
+          </div>
+        </div>
+      );
+    }
+
+    function WaveClearPopup({ wave, killedMonsters, onContinue }) {
+      return (
+        <div className="absolute inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.9)' }}>
+          <div className="popup-appear relative" style={{ maxWidth: '450px', width: '90%' }}>
+            {/* 반짝이는 외곽선 */}
+            <div className="absolute inset-0 rounded-3xl opacity-50" style={{
+              background: 'linear-gradient(45deg, #3b82f6, #8b5cf6, #ec4899, #3b82f6)',
+              backgroundSize: '300% 300%',
+              animation: 'shine 3s linear infinite',
+              filter: 'blur(10px)'
+            }}></div>
+
+            {/* 메인 컨테이너 */}
+            <div className="relative bg-gradient-to-br from-slate-800 via-slate-900 to-slate-800 p-8 rounded-3xl border-2 border-blue-400 shadow-2xl text-center">
+              {/* 상단 장식 */}
+              <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-6 py-2 rounded-full font-bold text-lg shadow-lg border-4 border-yellow-300">
+                WAVE {wave}
+              </div>
+
+              {/* 타이틀 */}
+              <div className="mt-4 mb-6 flex flex-col items-center">
+                <div className="text-6xl mb-3">⭐</div>
+                <h2 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-2">
+                  CLEAR!
+                </h2>
+                <div className="h-1 w-20 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full"></div>
+              </div>
+
+              {/* 통계 */}
+              <div className="bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl p-6 mb-6 border border-slate-600 shadow-inner flex flex-col items-center">
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <span className="text-5xl">💀</span>
+                  <span className="text-yellow-400 text-5xl font-black">{killedMonsters}</span>
+                </div>
+                <p className="text-gray-300 text-sm text-center">총 처치한 몬스터</p>
+              </div>
+
+              {/* 버튼 */}
+              <button
+                onClick={onContinue}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-black py-5 px-8 rounded-2xl transition-all transform hover:scale-105 text-xl shadow-2xl relative overflow-hidden group"
+              >
+                <span className="relative z-10 flex items-center justify-center gap-2">
+                  다음 웨이브
+                  <span className="text-2xl">→</span>
+                </span>
+                <div className="absolute inset-0 shine-effect opacity-0 group-hover:opacity-100"></div>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function VictoryScreen({ totalKilledMonsters, onRestart, onMainMenu }) {
+      return (
+        <div className="absolute inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.95)' }}>
+          <div className="popup-appear relative" style={{ maxWidth: '500px', width: '90%' }}>
+            {/* 금색 후광 효과 */}
+            <div className="absolute inset-0 rounded-3xl opacity-60" style={{
+              background: 'radial-gradient(circle, rgba(234,179,8,0.8) 0%, transparent 70%)',
+              animation: 'pulse 2s ease-in-out infinite'
+            }}></div>
+
+            {/* 메인 컨테이너 */}
+            <div className="relative bg-gradient-to-br from-yellow-900 via-amber-900 to-yellow-800 p-10 rounded-3xl border-4 border-yellow-400 shadow-2xl">
+              {/* 트로피 애니메이션 */}
+              <div className="text-8xl mb-4 animate-bounce">🏆</div>
+
+              {/* 타이틀 */}
+              <h2 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-200 mb-2 drop-shadow-lg" style={{
+                textShadow: '0 0 30px rgba(234,179,8,0.8)'
+              }}>
+                VICTORY!
+              </h2>
+
+              <div className="h-1.5 w-32 mx-auto bg-gradient-to-r from-transparent via-yellow-300 to-transparent rounded-full mb-6"></div>
+
+              {/* 완료 메시지 */}
+              <div className="bg-black bg-opacity-40 rounded-2xl p-6 mb-6 border-2 border-yellow-600">
+                <p className="text-yellow-200 text-2xl font-bold mb-4">🎉 당신은 왕국을 지켰습니다! 🎉</p>
+
+                <div className="bg-gradient-to-r from-yellow-800 to-amber-800 rounded-xl p-5 border border-yellow-600">
+                  <p className="text-yellow-300 text-sm mb-2">총 처치한 몬스터</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-5xl">💀</span>
+                    <span className="text-yellow-400 text-6xl font-black">{totalKilledMonsters}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 버튼들 */}
+              <div className="space-y-3">
+                <button
+                  onClick={onRestart}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-black py-4 px-8 rounded-2xl transition-all transform hover:scale-105 shadow-2xl"
+                >
+                  🔄 다시 시작
+                </button>
+                <button
+                  onClick={onMainMenu}
+                  className="w-full bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-4 px-8 rounded-2xl transition-all transform hover:scale-105 shadow-xl"
+                >
+                  🏠 메인 메뉴
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function GameOverScreen({ wave, bestWave, totalKilledMonsters, onRestart, onMainMenu }) {
+      const isNewRecord = wave >= bestWave;
+
+      return (
+        <div className="absolute inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0, 0, 0, 0.95)' }}>
+          <div className="popup-appear relative" style={{ maxWidth: '500px', width: '90%' }}>
+            {/* 어두운 붉은 후광 */}
+            <div className="absolute inset-0 rounded-3xl opacity-50" style={{
+              background: 'radial-gradient(circle, rgba(185,28,28,0.8) 0%, transparent 70%)',
+              animation: 'pulse 2s ease-in-out infinite'
+            }}></div>
+
+            {/* 메인 컨테이너 */}
+            <div className="relative bg-gradient-to-br from-red-950 via-red-900 to-slate-900 p-10 rounded-3xl border-4 border-red-600 shadow-2xl">
+              {/* 해골 아이콘 */}
+              <div className="text-8xl mb-4">💀</div>
+
+              {/* 타이틀 */}
+              <h2 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-400 via-red-500 to-red-400 mb-2 drop-shadow-lg" style={{
+                textShadow: '0 0 30px rgba(239,68,68,0.8)'
+              }}>
+                GAME OVER
+              </h2>
+
+              <div className="h-1.5 w-32 mx-auto bg-gradient-to-r from-transparent via-red-500 to-transparent rounded-full mb-6"></div>
+
+              {/* 신기록 배지 */}
+              {isNewRecord && wave > 1 && (
+                <div className="mb-6 bg-gradient-to-r from-yellow-600 to-yellow-500 p-4 rounded-2xl border-2 border-yellow-400 shadow-lg transform animate-pulse">
+                  <p className="text-white text-2xl font-black flex items-center justify-center gap-2">
+                    <span className="text-3xl">🎉</span>
+                    신기록 달성!
+                    <span className="text-3xl">🎉</span>
+                  </p>
+                </div>
+              )}
+
+              {/* 통계 */}
+              <div className="bg-black bg-opacity-50 rounded-2xl p-6 mb-6 border-2 border-red-800">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-gradient-to-br from-red-800 to-red-900 rounded-xl p-4 border border-red-700">
+                    <p className="text-red-300 text-sm mb-1">최종 웨이브</p>
+                    <p className="text-white text-4xl font-black">{wave}</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-red-800 to-red-900 rounded-xl p-4 border border-red-700">
+                    <p className="text-red-300 text-sm mb-1">최고 기록</p>
+                    <p className="text-yellow-400 text-4xl font-black">{bestWave}</p>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl p-4 border border-slate-600">
+                  <p className="text-gray-300 text-sm mb-2">총 처치한 몬스터</p>
+                  <div className="flex items-center justify-center gap-3">
+                    <span className="text-4xl">💀</span>
+                    <span className="text-red-400 text-5xl font-black">{totalKilledMonsters}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 버튼들 */}
+              <div className="space-y-3">
+                <button
+                  onClick={onRestart}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-black py-4 px-8 rounded-2xl transition-all transform hover:scale-105 shadow-2xl"
+                >
+                  🔄 다시 시작
+                </button>
+                <button
+                  onClick={onMainMenu}
+                  className="w-full bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white font-bold py-4 px-8 rounded-2xl transition-all transform hover:scale-105 shadow-xl"
+                >
+                  🏠 메인 메뉴
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==================== MAIN APP ====================
+
+    function App() {
+      const [isLoading, setIsLoading] = useState(true);
+      const [showStartScreen, setShowStartScreen] = useState(true);
+      const [user, setUser] = useState(null);
+      const [savedProgress, setSavedProgress] = useState(null);
+      const [isSaving, setIsSaving] = useState(false);
+      const [bestWave, setBestWave] = useState(1);
+
+      const [gameState, setGameState] = useState(() => ({
+        wave: 1,
+        turn: INITIAL_TURNS,
+        heroes: initializeHeroes(),
+        monsters: generateWave(1),
+        grid: generateRandomGrid(GRID_ROWS, GRID_COLS),
+        gameOver: false,
+        victory: false,
+        showWaveClearPopup: false,
+        killedMonsters: 0,
+        moveCounter: 0,
+        message: '3개 이상 블록을 연결하여 공격하세요!'
+      }));
+
+      const [animationState, setAnimationState] = useState({
+        isAnimating: false,
+        projectiles: [],
+        removingBlocks: [],
+        screenShake: false,
+        shockwaves: []
+      });
+
+      // Initialize user and load saved game
+      useEffect(() => {
+        async function initialize() {
+          let currentUser = await getCurrentUser();
+
+          if (!currentUser) {
+            currentUser = await signInAnonymously();
+          }
+
+          if (currentUser) {
+            setUser(currentUser);
+            const progress = await loadGameProgress(currentUser.id);
+            setSavedProgress(progress);
+            setBestWave(progress?.best_wave || 1);
+          }
+
+          setIsLoading(false);
+        }
+
+        initialize();
+      }, []);
+
+      // Auto-save game progress
+      useEffect(() => {
+        async function autoSave() {
+          if (!user || gameState.gameOver || animationState.isAnimating) return;
+
+          setIsSaving(true);
+          const currentBestWave = Math.max(bestWave, gameState.wave);
+          setBestWave(currentBestWave);
+
+          await saveGameProgress(user.id, gameState, currentBestWave);
+          setIsSaving(false);
+        }
+
+        const saveTimeout = setTimeout(autoSave, 1000);
+        return () => clearTimeout(saveTimeout);
+      }, [gameState, user, bestWave, animationState.isAnimating]);
+
+      const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+      const handleProjectileComplete = useCallback((projectileId) => {
+        setAnimationState(prev => ({
+          ...prev,
+          projectiles: prev.projectiles.filter(p => p.id !== projectileId)
+        }));
+      }, []);
+
+      const handleShockwaveComplete = useCallback((shockwaveId) => {
+        setAnimationState(prev => ({
+          ...prev,
+          shockwaves: prev.shockwaves.filter(s => s.id !== shockwaveId)
+        }));
+      }, []);
+
+      const handlePathComplete = useCallback(async (path) => {
+        if (animationState.isAnimating || gameState.gameOver) return;
+
+        setAnimationState(prev => ({ ...prev, isAnimating: true }));
+
+        const element = path[0].element;
+        const damage = calculateDamage(path.length);
+        const target = findTarget(gameState.monsters, element);
+
+        if (!target) {
+          // === AOE 공격 (타겟 라인에 몬스터 없음) ===
+          const targetLane = LANE_MAP[element];
+          const aoeDamage = Math.round(damage * 0.1);
+          const otherLaneMonsters = gameState.monsters.filter(m => m.lane !== targetLane);
+
+          if (otherLaneMonsters.length === 0) {
+            setGameState(prev => ({
+              ...prev,
+              message: '공격할 몬스터가 없습니다!'
+            }));
+            setAnimationState(prev => ({ ...prev, isAnimating: false }));
+            return;
+          }
+
+          // 영웅 공격 애니메이션
+          setGameState(prev => ({
+            ...prev,
+            heroes: prev.heroes.map(h =>
+              h.element === element ? { ...h, state: 'attacking' } : h
+            )
+          }));
+
+          await delay(300);
+
+          setGameState(prev => ({
+            ...prev,
+            heroes: prev.heroes.map(h => ({ ...h, state: 'idle' }))
+          }));
+
+          // 다수의 투사체 생성 (모든 다른 라인 몬스터에게)
+          const heroLane = LANE_MAP[element];
+          const containerWidth = Math.min(window.innerWidth, 720);
+          const battleZoneHeight = window.innerHeight * 0.35;
+          const laneHeight = battleZoneHeight / 4;
+          const heroX = containerWidth * 0.08;
+          const heroY = laneHeight * (heroLane + 0.5);
+
+          const newProjectiles = otherLaneMonsters.map(monster => ({
+            id: Date.now() + Math.random(),
+            from: { x: heroX, y: heroY },
+            to: {
+              x: containerWidth * (monster.position * 0.16) + 100,
+              y: laneHeight * (monster.lane + 0.5)
+            },
+            element: element,
+            isAOE: true
+          }));
+
+          setAnimationState(prev => ({
+            ...prev,
+            projectiles: [...prev.projectiles, ...newProjectiles]
+          }));
+
+          await delay(400);
+
+          // AOE 데미지 적용
+          setGameState(prev => {
+            const beforeKill = prev.monsters.length;
+            const updatedMonsters = applyAOEDamage(
+              prev.monsters,
+              targetLane,
+              aoeDamage
+            );
+            const afterKill = updatedMonsters.length;
+            const killedCount = beforeKill - afterKill;
+
+            return {
+              ...prev,
+              monsters: updatedMonsters,
+              killedMonsters: prev.killedMonsters + killedCount,
+              message: `전체 공격! ${aoeDamage} 데미지!`
+            };
+          });
+
+          await delay(300);
+
+          setGameState(prev => ({
+            ...prev,
+            monsters: prev.monsters
+              .map(m => ({ ...m, state: 'idle' }))
+          }));
+        } else {
+          // === 직접 공격 (타겟 라인에 몬스터 있음) ===
+          const targetLane = LANE_MAP[element];
+
+          setGameState(prev => ({
+            ...prev,
+            heroes: prev.heroes.map(h =>
+              h.element === element ? { ...h, state: 'attacking' } : h
+            )
+          }));
+
+          await delay(300);
+
+          setGameState(prev => ({
+            ...prev,
+            heroes: prev.heroes.map(h => ({ ...h, state: 'idle' }))
+          }));
+
+          const projectileId = Date.now();
+          const heroLane = LANE_MAP[element];
+
+          // Battle Zone 컨테이너 기준 (최대 720px, 중앙 정렬)
+          const containerWidth = Math.min(window.innerWidth, 720);
+          const battleZoneHeight = window.innerHeight * 0.35;
+          const laneHeight = battleZoneHeight / 4;
+
+          // 영웅은 왼쪽 padding 후 시작 (약 10% 위치)
+          const heroX = containerWidth * 0.08;
+
+          // 몬스터는 position * 16% + 100px (Monster 컴포넌트와 동일)
+          const monsterX = containerWidth * (target.position * 0.16) + 100;
+
+          // Y 위치는 각 레인의 중앙
+          const yPosition = laneHeight * (heroLane + 0.5);
+
+          setAnimationState(prev => ({
+            ...prev,
+            projectiles: [
+              ...prev.projectiles,
+              {
+                id: projectileId,
+                from: { x: heroX, y: yPosition },
+                to: { x: monsterX, y: yPosition },
+                element: element,
+                isAOE: false
+              }
+            ],
+            screenShake: true
+          }));
+
+          await delay(400);
+
+          // 충격파 효과 생성
+          const shockwaveId = Date.now() + 999;
+          setAnimationState(prev => ({
+            ...prev,
+            shockwaves: [
+              ...prev.shockwaves,
+              {
+                id: shockwaveId,
+                x: monsterX,
+                y: yPosition,
+                element: element
+              }
+            ]
+          }));
+
+          // 데미지 적용과 죽은 몬스터 제거를 하나의 상태 업데이트로 처리
+          let killedCount = 0;
+          setGameState(prev => {
+            // 해당 레인의 몬스터들 중 가장 가까운 것 찾기
+            const laneMonsters = prev.monsters.filter(m => m.lane === targetLane);
+
+            console.log('=== 직접 공격 디버그 ===');
+            console.log('Element:', element);
+            console.log('Target Lane:', targetLane);
+            console.log('Damage:', damage);
+            console.log('All Monsters:', prev.monsters.map(m => ({ id: m.id, lane: m.lane, hp: m.hp })));
+
+            if (laneMonsters.length === 0) {
+              console.log('❌ 해당 레인에 몬스터 없음');
+              return prev;
+            }
+
+            const currentTarget = laneMonsters.reduce((closest, monster) =>
+              monster.position < closest.position ? monster : closest
+            );
+
+            console.log('Current Target:', currentTarget);
+
+            const beforeKill = prev.monsters.length;
+
+            // 데미지 적용
+            const damagedMonsters = prev.monsters.map(m => {
+              if (m.id === currentTarget.id) {
+                const newHp = Math.max(0, m.hp - damage);
+                console.log(`✅ 데미지 적용: ${m.hp} → ${newHp}`);
+                return { ...m, hp: newHp, state: 'damaged' };
+              }
+              return m;
+            });
+
+            // 죽은 몬스터 필터링
+            const aliveMonsters = damagedMonsters.filter(m => m.hp > 0);
+            killedCount = beforeKill - aliveMonsters.length;
+
+            console.log('최종 몬스터:', aliveMonsters.map(m => ({ id: m.id, hp: m.hp })));
+            console.log('킬 카운트:', killedCount);
+
+            // 콤보 메시지 생성
+            let comboText = '';
+            if (path.length >= 10) {
+              comboText = '⚡ MEGA COMBO! ';
+            } else if (path.length >= 8) {
+              comboText = '🔥 SUPER COMBO! ';
+            } else if (path.length >= 6) {
+              comboText = '✨ COMBO! ';
+            }
+
+            return {
+              ...prev,
+              monsters: aliveMonsters,
+              killedMonsters: prev.killedMonsters + killedCount,
+              message: `${comboText}💥 ${damage} 데미지!`
+            };
+          });
+
+          // 화면 흔들림 효과 제거
+          setTimeout(() => {
+            setAnimationState(prev => ({
+              ...prev,
+              screenShake: false
+            }));
+          }, 400);
+
+          await delay(300);
+        }
+
+        // === 몬스터 반격 ===
+        // 데미지 상태를 idle로 변경
+        setGameState(prev => ({
+          ...prev,
+          monsters: prev.monsters.map(m => ({ ...m, state: 'idle' }))
+        }));
+
+        await delay(200);
+
+        // 살아있는 몬스터들이 각자의 레인 영웅을 공격
+        setGameState(prev => {
+          const aliveMonsters = prev.monsters.filter(m => m.hp > 0);
+
+          if (aliveMonsters.length === 0) return prev;
+
+          // 각 레인별로 몬스터가 있는지 확인하고 영웅 HP 감소
+          const updatedHeroes = prev.heroes.map(hero => {
+            const monsterInLane = aliveMonsters.find(m => m.lane === hero.lane);
+            if (monsterInLane) {
+              return { ...hero, hp: Math.max(0, hero.hp - 5), state: 'damaged' };
+            }
+            return hero;
+          });
+
+          return {
+            ...prev,
+            heroes: updatedHeroes,
+            monsters: prev.monsters.map(m => ({ ...m, state: 'attacking' })),
+            message: '몬스터의 반격!'
+          };
+        });
+
+        await delay(400);
+
+        // 상태 초기화
+        setGameState(prev => ({
+          ...prev,
+          heroes: prev.heroes.map(h => ({ ...h, state: 'idle' })),
+          monsters: prev.monsters.map(m => ({ ...m, state: 'idle' }))
+        }));
+
+        await delay(200);
+
+        setAnimationState(prev => ({
+          ...prev,
+          removingBlocks: path
+        }));
+
+        await delay(300);
+
+        setGameState(prev => {
+          let newState = { ...prev };
+
+          newState.grid = updateGridAfterAttack(prev.grid, path);
+
+          // moveCounter 증가
+          newState.moveCounter = prev.moveCounter + 1;
+
+          // Wave 5 이상: 2턴에 1번만 이동 (moveCounter가 홀수일 때만)
+          // Wave 4 이하: 매 턴 이동
+          const shouldMove = prev.wave < 5 || newState.moveCounter % 2 === 1;
+
+          if (shouldMove) {
+            newState.monsters = prev.monsters.map(m => ({
+              ...m,
+              position: m.position - 1
+            }));
+
+            // 몬스터가 pos < 0으로 넘어가면 게임 오버
+            const escapedMonsters = newState.monsters.filter(m => m.position < 0);
+            if (escapedMonsters.length > 0) {
+              newState.gameOver = true;
+              newState.message = '괴물이 성벽을 넘었습니다!';
+              // 탈출한 몬스터도 킬 카운트에 추가
+              newState.killedMonsters = prev.killedMonsters + escapedMonsters.length;
+              newState.monsters = newState.monsters.filter(m => m.position >= 0);
+              // bestWave 업데이트
+              setBestWave(currentBest => Math.max(currentBest, prev.wave));
+            } else {
+              // 몬스터 필터링 (pos >= 0인 것만)
+              newState.monsters = newState.monsters.filter(m => m.position >= 0);
+            }
+          } else {
+            // 이동하지 않을 때는 기존 몬스터 유지
+            newState.monsters = prev.monsters;
+          }
+
+          newState.turn = prev.turn - 1;
+
+          // 게임 오버 조건 먼저 체크
+          if (newState.turn <= 0 && !newState.gameOver) {
+            newState.gameOver = true;
+            newState.message = '턴이 모두 소진되었습니다!';
+            // bestWave 업데이트
+            setBestWave(currentBest => Math.max(currentBest, prev.wave));
+          } else if (!newState.gameOver && newState.monsters.length === 0) {
+            // 게임 오버가 아닐 때만 웨이브 클리어 체크
+            if (newState.wave >= 10) {
+              // 10웨이브 클리어 시 승리
+              newState.victory = true;
+              newState.message = '모든 웨이브 클리어!';
+              // bestWave 업데이트
+              setBestWave(currentBest => Math.max(currentBest, prev.wave));
+            } else {
+              // 웨이브 클리어 팝업 표시
+              newState.showWaveClearPopup = true;
+              newState.message = `Wave ${newState.wave} 클리어!`;
+            }
+          }
+
+          return newState;
+        });
+
+        setAnimationState({
+          isAnimating: false,
+          projectiles: [],
+          removingBlocks: [],
+          screenShake: false,
+          shockwaves: []
+        });
+      }, [gameState, animationState.isAnimating]);
+
+      const handleWaveClearContinue = useCallback(() => {
+        setGameState(prev => {
+          const newTurn = Math.min(prev.turn + TURN_BONUS, MAX_TURNS);
+          return {
+            ...prev,
+            wave: prev.wave + 1,
+            turn: newTurn,
+            monsters: generateWave(prev.wave + 1),
+            showWaveClearPopup: false,
+            moveCounter: 0,
+            message: `Wave ${prev.wave + 1}! +${TURN_BONUS} 턴!`
+          };
+        });
+      }, []);
+
+      const handleNewGame = useCallback(() => {
+        setGameState({
+          wave: 1,
+          turn: INITIAL_TURNS,
+          heroes: initializeHeroes(),
+          monsters: generateWave(1),
+          grid: generateRandomGrid(GRID_ROWS, GRID_COLS),
+          gameOver: false,
+          victory: false,
+          showWaveClearPopup: false,
+          killedMonsters: 0,
+          moveCounter: 0,
+          message: '3개 이상 블록을 연결하여 공격하세요!'
+        });
+        setAnimationState({
+          isAnimating: false,
+          projectiles: [],
+          removingBlocks: [],
+          screenShake: false,
+          shockwaves: []
+        });
+        setShowStartScreen(false);
+      }, []);
+
+      const handleContinueGame = useCallback(() => {
+        if (savedProgress) {
+          setGameState({
+            wave: savedProgress.wave,
+            turn: savedProgress.turn,
+            heroes: savedProgress.heroes,
+            monsters: savedProgress.monsters,
+            grid: savedProgress.grid,
+            gameOver: false,
+            victory: false,
+            showWaveClearPopup: false,
+            killedMonsters: savedProgress.killed_monsters || 0,
+            moveCounter: 0,
+            message: '게임을 이어합니다!'
+          });
+          setAnimationState({
+            isAnimating: false,
+            projectiles: [],
+            removingBlocks: [],
+            screenShake: false,
+            shockwaves: []
+          });
+          setShowStartScreen(false);
+        }
+      }, [savedProgress]);
+
+      const handleMainMenu = useCallback(() => {
+        setShowStartScreen(true);
+        setGameState({
+          wave: 1,
+          turn: INITIAL_TURNS,
+          heroes: initializeHeroes(),
+          monsters: generateWave(1),
+          grid: generateRandomGrid(GRID_ROWS, GRID_COLS),
+          gameOver: false,
+          message: '3개 이상 블록을 연결하여 공격하세요!'
+        });
+      }, []);
+
+      if (isLoading) {
+        return <LoadingScreen />;
+      }
+
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-black">
+          <div
+            className={`relative flex flex-col text-white ${animationState.screenShake ? 'screen-shake' : ''}`}
+            style={{
+              width: '100%',
+              maxWidth: '720px',
+              height: '100%',
+              backgroundImage: 'url(images/BG.png)',
+              backgroundSize: 'contain',
+              backgroundPosition: 'center top',
+              backgroundRepeat: 'no-repeat'
+            }}
+          >
+
+          {showStartScreen ? (
+            <StartScreen
+              onNewGame={handleNewGame}
+              onContinue={handleContinueGame}
+              hasSavedGame={savedProgress && !savedProgress.game_over}
+              bestWave={bestWave}
+            />
+          ) : (
+            <>
+              <div style={{ height: '10%', position: 'relative', zIndex: 10 }}>
+                <HUD
+                  wave={gameState.wave}
+                  turn={gameState.turn}
+                  bestWave={bestWave}
+                  isSaving={isSaving}
+                />
+              </div>
+
+              <div style={{ height: '35%', position: 'relative', zIndex: 5 }}>
+                <BattleZone
+                  heroes={gameState.heroes}
+                  monsters={gameState.monsters}
+                  projectiles={animationState.projectiles}
+                  shockwaves={animationState.shockwaves}
+                  onProjectileComplete={handleProjectileComplete}
+                  onShockwaveComplete={handleShockwaveComplete}
+                />
+              </div>
+
+              <div style={{ height: '6%', position: 'relative', zIndex: 10 }}>
+                <GuideBar message={gameState.message} />
+              </div>
+
+              <div style={{ height: '55%', position: 'relative', zIndex: 20 }}>
+                <PuzzleZone
+                  grid={gameState.grid}
+                  onPathComplete={handlePathComplete}
+                  disabled={animationState.isAnimating || gameState.gameOver || gameState.showWaveClearPopup || gameState.victory}
+                  removingBlocks={animationState.removingBlocks}
+                />
+              </div>
+
+              {gameState.showWaveClearPopup && (
+                <WaveClearPopup
+                  wave={gameState.wave}
+                  killedMonsters={gameState.killedMonsters}
+                  onContinue={handleWaveClearContinue}
+                />
+              )}
+
+              {gameState.victory && (
+                <VictoryScreen
+                  totalKilledMonsters={gameState.killedMonsters}
+                  onRestart={handleNewGame}
+                  onMainMenu={handleMainMenu}
+                />
+              )}
+
+              {gameState.gameOver && (
+                <GameOverScreen
+                  wave={gameState.wave}
+                  bestWave={bestWave}
+                  totalKilledMonsters={gameState.killedMonsters}
+                  onRestart={handleNewGame}
+                  onMainMenu={handleMainMenu}
+                />
+              )}
+            </>
+          )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
