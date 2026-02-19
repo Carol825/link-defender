@@ -1008,7 +1008,7 @@
     function Monster({ element, hp, maxHp, position, state }) {
       const config = ELEMENT_CONFIG[element];
       const hpPercent = (hp / maxHp) * 100;
-      const isStrong = maxHp >= 150;
+      const isStrong = maxHp >= 140;
 
       return (
         <div
@@ -1031,6 +1031,9 @@
               ${state === 'damaged' ? 'monster-damaged' : ''}
               ${state === 'attacking' ? 'hero-attacking' : ''}
             `}
+            style={{
+              filter: isStrong ? 'drop-shadow(0 0 10px rgba(255, 0, 0, 0.8)) drop-shadow(0 0 20px rgba(255, 0, 0, 0.6))' : 'none'
+            }}
           >
             {config.monsterImage ? (
               <img
@@ -1038,8 +1041,8 @@
                 alt={element}
                 className="object-contain"
                 style={{
-                  width: isStrong ? '75px' : '65px',
-                  height: isStrong ? '75px' : '65px'
+                  width: isStrong ? '80px' : '65px',
+                  height: isStrong ? '80px' : '65px'
                 }}
                 draggable="false"
               />
