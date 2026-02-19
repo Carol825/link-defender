@@ -612,7 +612,7 @@
           });
         }
       }
-      // Wave 10 (Final Boss): 2마리, 랜덤 레인, HP 800+
+      // Wave 10: 2마리, 랜덤 레인, HP 800
       else if (wave === 10) {
         const count = 2;
         const hp = 800;
@@ -625,6 +625,40 @@
             maxHp: hp,
             lane: randomLane,
             position: 3,
+            state: 'idle'
+          });
+        }
+      }
+      // Wave 11: 3마리, 랜덤 레인, HP 1000
+      else if (wave === 11) {
+        const count = 3;
+        const hp = 1000;
+        for (let i = 0; i < count; i++) {
+          const randomLane = Math.floor(Math.random() * 4);
+          monsters.push({
+            id: `monster-${Date.now()}-${i}-${Math.random()}`,
+            element: ELEMENTS[randomLane],
+            hp: hp,
+            maxHp: hp,
+            lane: randomLane,
+            position: Math.floor(Math.random() * 3) + 2, // 2~4 랜덤
+            state: 'idle'
+          });
+        }
+      }
+      // Wave 12 (Final Boss): 4마리, 랜덤 레인, HP 1500
+      else if (wave === 12) {
+        const count = 4;
+        const hp = 1500;
+        for (let i = 0; i < count; i++) {
+          const randomLane = Math.floor(Math.random() * 4);
+          monsters.push({
+            id: `monster-${Date.now()}-${i}-${Math.random()}`,
+            element: ELEMENTS[randomLane],
+            hp: hp,
+            maxHp: hp,
+            lane: randomLane,
+            position: Math.floor(Math.random() * 3) + 2, // 2~4 랜덤
             state: 'idle'
           });
         }
@@ -1994,8 +2028,8 @@
             setBestWave(currentBest => Math.max(currentBest, prev.wave));
           } else if (!newState.gameOver && newState.monsters.length === 0) {
             // 게임 오버가 아닐 때만 웨이브 클리어 체크
-            if (newState.wave >= 10) {
-              // 10웨이브 클리어 시 승리
+            if (newState.wave >= 12) {
+              // 12웨이브 클리어 시 승리
               newState.victory = true;
               newState.message = '모든 웨이브 클리어!';
               // bestWave 업데이트
