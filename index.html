@@ -702,6 +702,8 @@
 
       return (
         <div
+          data-row={row}
+          data-col={col}
           className={`
             relative flex items-center justify-center
             ${config.color}
@@ -724,7 +726,6 @@
           onMouseDown={(e) => onInteract(e, row, col)}
           onMouseEnter={(e) => onInteract(e, row, col)}
           onTouchStart={(e) => onInteract(e, row, col)}
-          onTouchMove={(e) => onInteract(e, row, col)}
         >
           {/* 상단 하이라이트 */}
           <div
@@ -828,7 +829,7 @@
           event.preventDefault();
           setIsDrawing(true);
           setPath([{ row, col, element: block.element }]);
-        } else if ((event.type === 'mouseenter' || event.type === 'touchmove') && isDrawing) {
+        } else if (event.type === 'mouseenter' && isDrawing) {
           event.preventDefault();
 
           setPath(currentPath => {
@@ -844,6 +845,43 @@
           });
         }
       }, [grid, disabled, isDrawing]);
+
+      // 터치 이동 중 블록 감지 (모바일용)
+      const handleTouchMove = useCallback((event) => {
+        if (!isDrawing || disabled) return;
+        event.preventDefault();
+
+        const touch = event.touches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        if (!element) return;
+
+        // data-row, data-col 속성을 가진 블록 요소 찾기
+        let blockElement = element;
+        while (blockElement && !blockElement.hasAttribute('data-row')) {
+          blockElement = blockElement.parentElement;
+        }
+
+        if (!blockElement) return;
+
+        const row = parseInt(blockElement.getAttribute('data-row'));
+        const col = parseInt(blockElement.getAttribute('data-col'));
+        const block = grid[row]?.[col];
+
+        if (!block) return;
+
+        setPath(currentPath => {
+          const validation = canAddToPath(currentPath, { row, col, element: block.element });
+
+          if (validation === 'backtrack') {
+            return currentPath.slice(0, -1);
+          } else if (validation === true) {
+            return [...currentPath, { row, col, element: block.element }];
+          }
+
+          return currentPath;
+        });
+      }, [isDrawing, disabled, grid]);
 
       const handleEnd = useCallback((event) => {
         if (!isDrawing) return;
@@ -865,13 +903,15 @@
         if (isDrawing) {
           document.addEventListener('mouseup', handleGlobalMouseUp);
           document.addEventListener('touchend', handleGlobalTouchEnd);
+          document.addEventListener('touchmove', handleTouchMove, { passive: false });
         }
 
         return () => {
           document.removeEventListener('mouseup', handleGlobalMouseUp);
           document.removeEventListener('touchend', handleGlobalTouchEnd);
+          document.removeEventListener('touchmove', handleTouchMove);
         };
-      }, [isDrawing, handleEnd]);
+      }, [isDrawing, handleEnd, handleTouchMove]);
 
       return (
         <div className="relative h-full w-full flex items-center justify-center puzzle-zone" style={{ padding: '0 20px 20px 20px' }}>
