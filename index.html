@@ -1018,12 +1018,11 @@
             top: '50%',
             transform: 'translate(-50%, -50%)',
             transition: 'left 0.3s ease-out',
-            height: '90px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: '0px'
+            justifyContent: 'center',
+            gap: '2px'
           }}
         >
           <div
@@ -1032,7 +1031,6 @@
               ${state === 'damaged' ? 'monster-damaged' : ''}
               ${state === 'attacking' ? 'hero-attacking' : ''}
             `}
-            style={{ marginBottom: 'auto' }}
           >
             {config.monsterImage ? (
               <img
