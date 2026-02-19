@@ -261,6 +261,13 @@
     // ==================== CONSTANTS ====================
     const ELEMENTS = ['ice', 'fire', 'electric', 'nature'];
 
+    const ELEMENT_NAMES_KR = {
+      ice: '얼음',
+      fire: '불',
+      electric: '번개',
+      nature: '자연'
+    };
+
     const ELEMENT_CONFIG = {
       ice: {
         color: 'bg-sky-400',
@@ -508,6 +515,23 @@
       return hp >= 300 ? '👹' : '👿';
     }
 
+    function getWaveGuideMessage(monsters, wave) {
+      if (wave > 4) {
+        return '3개 이상 블록을 연결하여 공격하세요!';
+      }
+
+      // Wave 1-4: 몬스터가 있는 라인의 블록을 알려줌
+      const uniqueElements = [...new Set(monsters.map(m => m.element))];
+
+      if (uniqueElements.length === 1) {
+        const elementName = ELEMENT_NAMES_KR[uniqueElements[0]];
+        return `${elementName} 블록을 3개 이상 연결하세요!`;
+      } else {
+        const elementNames = uniqueElements.map(e => ELEMENT_NAMES_KR[e]).join(', ');
+        return `${elementNames} 블록을 연결하세요!`;
+      }
+    }
+
     function generateWave(wave) {
       let monsters = [];
 
@@ -672,7 +696,7 @@
     }
 
     function Block({ row, col, element, isSelected, selectionIndex, onInteract, isRemoving, isNew }) {
-      if (!element) return <div className="aspect-square" />;
+      if (!element) return <div className="w-full h-full" />;
 
       const config = ELEMENT_CONFIG[element];
 
@@ -687,7 +711,7 @@
             ${isNew ? 'block-new' : ''}
             cursor-pointer
             transition-all duration-150
-            aspect-square
+            w-full h-full
           `}
           style={{
             boxShadow: isSelected
@@ -850,13 +874,11 @@
       }, [isDrawing, handleEnd]);
 
       return (
-        <div className="relative h-full w-full flex items-center justify-center puzzle-zone px-2">
+        <div className="relative h-full w-full flex items-center justify-center puzzle-zone" style={{ padding: '0 20px 20px 20px' }}>
           <div
             ref={gridRef}
-            className="relative grid gap-1 w-full"
+            className="relative grid gap-1 w-full h-full"
             style={{
-              maxWidth: '600px',
-              aspectRatio: '7 / 6',
               gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
               gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`
             }}
@@ -892,8 +914,16 @@
       const config = ELEMENT_CONFIG[element];
       const hpPercent = (hp / maxHp) * 100;
 
+      // 각 영웅별 Y 위치 조정 (전부 통일)
+      const heroYPositions = {
+        ice: -20,
+        fire: -20,
+        electric: -20,
+        nature: -20
+      };
+
       return (
-        <div className="flex flex-col items-center gap-1" style={{ transform: 'translate(30px, 5px)' }}>
+        <div className="flex flex-col items-center gap-1" style={{ transform: `translate(30px, ${heroYPositions[element]}px)` }}>
           <div
             className={`
               ${state === 'attacking' ? 'hero-attacking' : ''}
@@ -944,8 +974,8 @@
         <div
           className="flex flex-col items-center gap-1 absolute"
           style={{
-            left: `calc(${position * 16}% + 100px)`,
-            top: '50%',
+            left: `calc(${position * 20}% + 20px)`,
+            top: 'calc(50% - 20px)',
             transform: 'translateY(-50%)',
             transition: 'left 0.3s ease-out'
           }}
@@ -1218,16 +1248,83 @@
       );
     }
 
+    // 속성별 색상 매핑
+    const ELEMENT_COLORS = {
+      '얼음': '#38bdf8',  // sky-400
+      '불': '#ef4444',    // red-500
+      '번개': '#facc15',  // yellow-400
+      '자연': '#22c55e'   // green-500
+    };
+
+    // 메시지에서 속성 이름을 찾아서 색상과 함께 파싱
+    function parseMessageWithColors(message) {
+      const elementNames = ['얼음', '불', '번개', '자연'];
+      const parts = [];
+      let remaining = message;
+
+      while (remaining.length > 0) {
+        let foundElement = null;
+        let foundIndex = -1;
+
+        // 가장 먼저 나오는 속성 이름 찾기
+        for (const elementName of elementNames) {
+          const index = remaining.indexOf(elementName);
+          if (index !== -1 && (foundIndex === -1 || index < foundIndex)) {
+            foundElement = elementName;
+            foundIndex = index;
+          }
+        }
+
+        if (foundIndex === -1) {
+          // 더 이상 속성 이름이 없으면 나머지 전부 추가
+          if (remaining.length > 0) {
+            parts.push(remaining);
+          }
+          break;
+        } else {
+          // 속성 이름 전까지의 텍스트 추가
+          if (foundIndex > 0) {
+            parts.push(remaining.substring(0, foundIndex));
+          }
+          // 속성 이름 추가 (색상 포함)
+          parts.push({
+            text: foundElement,
+            color: ELEMENT_COLORS[foundElement]
+          });
+          // 나머지로 업데이트
+          remaining = remaining.substring(foundIndex + foundElement.length);
+        }
+      }
+
+      return parts;
+    }
+
     function GuideBar({ message }) {
       const isCombo = message.includes('COMBO');
+      const parts = parseMessageWithColors(message);
+
       return (
-        <div className="h-full w-full flex items-center justify-center px-4" style={{ paddingTop: '110px' }}>
+        <div className="h-full w-full flex items-center justify-center px-4">
           <div
-            className={`text-white text-base sm:text-lg text-center w-full text-outline ${isCombo ? 'combo-message' : 'fade-in'}`}
-            style={{ maxWidth: '720px' }}
+            className={`text-white text-center w-full text-outline ${isCombo ? 'combo-message' : 'fade-in'}`}
+            style={{
+              maxWidth: '720px',
+              fontSize: 'clamp(14px, 2.5vw, 18px)',
+              transform: 'translateY(-10px)'
+            }}
             key={message}
           >
-            {message}
+            {parts.map((part, index) => {
+              if (typeof part === 'string') {
+                return <React.Fragment key={index}>{part}</React.Fragment>;
+              } else {
+                return (
+                  <span key={index} style={{ color: part.color, fontWeight: 'bold' }}>
+                    {part.text}
+                  </span>
+                );
+              }
+            })}
           </div>
         </div>
       );
@@ -1435,19 +1532,22 @@
       const [isSaving, setIsSaving] = useState(false);
       const [bestWave, setBestWave] = useState(1);
 
-      const [gameState, setGameState] = useState(() => ({
-        wave: 1,
-        turn: INITIAL_TURNS,
-        heroes: initializeHeroes(),
-        monsters: generateWave(1),
-        grid: generateRandomGrid(GRID_ROWS, GRID_COLS),
-        gameOver: false,
-        victory: false,
-        showWaveClearPopup: false,
-        killedMonsters: 0,
-        moveCounter: 0,
-        message: '3개 이상 블록을 연결하여 공격하세요!'
-      }));
+      const [gameState, setGameState] = useState(() => {
+        const initialMonsters = generateWave(1);
+        return {
+          wave: 1,
+          turn: INITIAL_TURNS,
+          heroes: initializeHeroes(),
+          monsters: initialMonsters,
+          grid: generateRandomGrid(GRID_ROWS, GRID_COLS),
+          gameOver: false,
+          victory: false,
+          showWaveClearPopup: false,
+          killedMonsters: 0,
+          moveCounter: 0,
+          message: getWaveGuideMessage(initialMonsters, 1)
+        };
+      });
 
       const [animationState, setAnimationState] = useState({
         isAnimating: false,
@@ -1554,17 +1654,17 @@
           // 다수의 투사체 생성 (모든 다른 라인 몬스터에게)
           const heroLane = LANE_MAP[element];
           const containerWidth = Math.min(window.innerWidth, 720);
-          const battleZoneHeight = window.innerHeight * 0.35;
+          const battleZoneHeight = window.innerHeight * 0.46;
           const laneHeight = battleZoneHeight / 4;
           const heroX = containerWidth * 0.08;
-          const heroY = laneHeight * (heroLane + 0.5);
+          const heroY = laneHeight * (heroLane + 0.5) - 20;
 
           const newProjectiles = otherLaneMonsters.map(monster => ({
             id: Date.now() + Math.random(),
             from: { x: heroX, y: heroY },
             to: {
-              x: containerWidth * (monster.position * 0.16) + 100,
-              y: laneHeight * (monster.lane + 0.5)
+              x: containerWidth * (monster.position * 0.20) + 20,
+              y: laneHeight * (monster.lane + 0.5) - 20
             },
             element: element,
             isAOE: true
@@ -1588,11 +1688,17 @@
             const afterKill = updatedMonsters.length;
             const killedCount = beforeKill - afterKill;
 
+            // AOE 메시지: 해당 라인에 블록이 없으니 다른 블록으로 공격했다는 안내
+            const elementNameKR = ELEMENT_NAMES_KR[element];
+            const aoeMessage = prev.wave <= 4
+              ? `${elementNameKR} 블록이 부족해요! 다른 블록으로 ${aoeDamage} 데미지!`
+              : `전체 공격! ${aoeDamage} 데미지!`;
+
             return {
               ...prev,
               monsters: updatedMonsters,
               killedMonsters: prev.killedMonsters + killedCount,
-              message: `전체 공격! ${aoeDamage} 데미지!`
+              message: aoeMessage
             };
           });
 
@@ -1626,17 +1732,17 @@
 
           // Battle Zone 컨테이너 기준 (최대 720px, 중앙 정렬)
           const containerWidth = Math.min(window.innerWidth, 720);
-          const battleZoneHeight = window.innerHeight * 0.35;
+          const battleZoneHeight = window.innerHeight * 0.46;
           const laneHeight = battleZoneHeight / 4;
 
           // 영웅은 왼쪽 padding 후 시작 (약 10% 위치)
           const heroX = containerWidth * 0.08;
 
-          // 몬스터는 position * 16% + 100px (Monster 컴포넌트와 동일)
-          const monsterX = containerWidth * (target.position * 0.16) + 100;
+          // 몬스터는 position * 20% + 30px (Monster 컴포넌트와 동일)
+          const monsterX = containerWidth * (target.position * 0.20) + 20;
 
-          // Y 위치는 각 레인의 중앙
-          const yPosition = laneHeight * (heroLane + 0.5);
+          // Y 위치는 각 레인의 중앙에서 -20px
+          const yPosition = laneHeight * (heroLane + 0.5) - 20;
 
           setAnimationState(prev => ({
             ...prev,
@@ -1768,18 +1874,18 @@
           return {
             ...prev,
             heroes: updatedHeroes,
-            monsters: prev.monsters.map(m => ({ ...m, state: 'attacking' })),
-            message: '몬스터의 반격!'
+            monsters: prev.monsters.map(m => ({ ...m, state: 'attacking' }))
           };
         });
 
         await delay(400);
 
-        // 상태 초기화
+        // 상태 초기화 및 가이드 메시지
         setGameState(prev => ({
           ...prev,
           heroes: prev.heroes.map(h => ({ ...h, state: 'idle' })),
-          monsters: prev.monsters.map(m => ({ ...m, state: 'idle' }))
+          monsters: prev.monsters.map(m => ({ ...m, state: 'idle' })),
+          message: prev.wave <= 4 ? getWaveGuideMessage(prev.monsters, prev.wave) : '블록을 연결하여 반격하세요!'
         }));
 
         await delay(200);
@@ -1866,31 +1972,34 @@
       const handleWaveClearContinue = useCallback(() => {
         setGameState(prev => {
           const newTurn = Math.min(prev.turn + TURN_BONUS, MAX_TURNS);
+          const newWave = prev.wave + 1;
+          const newMonsters = generateWave(newWave);
           return {
             ...prev,
-            wave: prev.wave + 1,
+            wave: newWave,
             turn: newTurn,
-            monsters: generateWave(prev.wave + 1),
+            monsters: newMonsters,
             showWaveClearPopup: false,
             moveCounter: 0,
-            message: `Wave ${prev.wave + 1}! +${TURN_BONUS} 턴!`
+            message: getWaveGuideMessage(newMonsters, newWave)
           };
         });
       }, []);
 
       const handleNewGame = useCallback(() => {
+        const newMonsters = generateWave(1);
         setGameState({
           wave: 1,
           turn: INITIAL_TURNS,
           heroes: initializeHeroes(),
-          monsters: generateWave(1),
+          monsters: newMonsters,
           grid: generateRandomGrid(GRID_ROWS, GRID_COLS),
           gameOver: false,
           victory: false,
           showWaveClearPopup: false,
           killedMonsters: 0,
           moveCounter: 0,
-          message: '3개 이상 블록을 연결하여 공격하세요!'
+          message: getWaveGuideMessage(newMonsters, 1)
         });
         setAnimationState({
           isAnimating: false,
@@ -1915,7 +2024,7 @@
             showWaveClearPopup: false,
             killedMonsters: savedProgress.killed_monsters || 0,
             moveCounter: 0,
-            message: '게임을 이어합니다!'
+            message: getWaveGuideMessage(savedProgress.monsters, savedProgress.wave)
           });
           setAnimationState({
             isAnimating: false,
@@ -1980,7 +2089,7 @@
                 />
               </div>
 
-              <div style={{ height: '35%', position: 'relative', zIndex: 5 }}>
+              <div style={{ height: '46%', position: 'relative', zIndex: 5 }}>
                 <BattleZone
                   heroes={gameState.heroes}
                   monsters={gameState.monsters}
@@ -1991,11 +2100,11 @@
                 />
               </div>
 
-              <div style={{ height: '6%', position: 'relative', zIndex: 10 }}>
+              <div style={{ height: '2%', position: 'relative', zIndex: 10 }}>
                 <GuideBar message={gameState.message} />
               </div>
 
-              <div style={{ height: '55%', position: 'relative', zIndex: 20 }}>
+              <div style={{ height: '42%', position: 'relative', zIndex: 20 }}>
                 <PuzzleZone
                   grid={gameState.grid}
                   onPathComplete={handlePathComplete}
