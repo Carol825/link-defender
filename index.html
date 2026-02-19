@@ -1138,23 +1138,9 @@
       const hero = heroes.find(h => h.lane === laneIndex);
       const laneMonsters = monsters.filter(m => m.lane === laneIndex);
 
-      // 각 레인별 배경 이미지
-      const laneBackgrounds = [
-        'images/lane-ice.png',      // 얼음 레인
-        'images/lane-fire.png',     // 불 레인
-        'images/lane-electric.png', // 전기 레인
-        'images/lane-nature.png'    // 자연 레인
-      ];
-
       return (
         <div
           className="relative flex items-center h-full px-2"
-          style={{
-            backgroundImage: `url('${laneBackgrounds[laneIndex]}')`,
-            backgroundSize: '100% 100%',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-          }}
         >
           <div className="flex-shrink-0">
             {hero && <Hero {...hero} />}
@@ -1964,12 +1950,14 @@
           <div
             className={`relative flex flex-col text-white ${animationState.screenShake ? 'screen-shake' : ''}`}
             style={{
-              width: '100%',
-              maxWidth: '720px',
+              aspectRatio: '9 / 16',
+              width: 'auto',
               height: '100%',
+              maxHeight: '100vh',
+              maxWidth: '100vw',
               backgroundImage: 'url(images/BG.png)',
-              backgroundSize: 'contain',
-              backgroundPosition: 'center top',
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat'
             }}
           >
