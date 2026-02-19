@@ -2055,7 +2055,7 @@
 
       const handleWaveClearContinue = useCallback(() => {
         setGameState(prev => {
-          const newTurn = Math.min(prev.turn + TURN_BONUS, MAX_TURNS);
+          const newTurn = Math.min(prev.turn + prev.wave, MAX_TURNS);
           const newWave = prev.wave + 1;
           const newMonsters = generateWave(newWave);
           return {
