@@ -1012,19 +1012,28 @@
 
       return (
         <div
-          className="flex flex-col items-center gap-1 absolute"
+          className="absolute"
           style={{
             left: `calc(${position * 20}% + 20px)`,
-            top: 'calc(50% - 20px)',
-            transform: 'translateY(-50%)',
-            transition: 'left 0.3s ease-out'
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            transition: 'left 0.3s ease-out',
+            height: '120px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: '4px'
           }}
         >
-          <div className={`
-            ${state === 'idle' ? (isStrong ? 'monster-bounce-strong' : 'monster-bounce') : ''}
-            ${state === 'damaged' ? 'monster-damaged' : ''}
-            ${state === 'attacking' ? 'hero-attacking' : ''}
-          `}>
+          <div
+            className={`
+              ${state === 'idle' ? (isStrong ? 'monster-bounce-strong' : 'monster-bounce') : ''}
+              ${state === 'damaged' ? 'monster-damaged' : ''}
+              ${state === 'attacking' ? 'hero-attacking' : ''}
+            `}
+            style={{ marginBottom: 'auto' }}
+          >
             {config.monsterImage ? (
               <img
                 src={config.monsterImage}
